@@ -62,6 +62,10 @@ boolean schedActive;
 byte setButton = 0;
 int activeTime;
 
+int bfastID;
+int lunchID;
+int dinnerID;
+
 void setup() {
 
   //start serial connection
@@ -73,12 +77,13 @@ void setup() {
   delay(3000);
   display.setTextColor(WHITE);  // set color for all text.
   
-  // initialize servo
+  /* initialize servo
   myservo.attach(SERVO_PIN);    // attaches the servo on pin 6 to the servo object
   myservo.write(0);             // initialize servo to start position.  Maximum is 170
   delay(1000);                  // wait for motor to complete turn before backing off
   myservo.write(10);            // back off to prevent straining of servo motor
   myservo.detach();             // disconnect servo to prevent hum/straining 
+  */
 
   // initialize time
   setTime(11,59,50,1,1,19);     // set time to Saturday 12:00:00pm Jan 1, 2019
@@ -90,24 +95,24 @@ void setup() {
   // if there is something stored, set the alarm(s)
   if (eeprom_value > 0 && eeprom_value < 8) {
     if (eeprom_value == 1) {
-      Alarm.alarmRepeat(BREAKFAST_HOUR,BREAKFAST_MIN,0, Breakfast);
+      bfastID = Alarm.alarmRepeat(BREAKFAST_HOUR,BREAKFAST_MIN,0, Breakfast);
     } else if (eeprom_value == 2) {
-      Alarm.alarmRepeat(LUNCH_HOUR,LUNCH_MIN,0, Lunch);
+      lunchID = Alarm.alarmRepeat(LUNCH_HOUR,LUNCH_MIN,0, Lunch);
     } else if (eeprom_value == 3) {
-      Alarm.alarmRepeat(DINNER_HOUR,DINNER_MIN,0, Dinner);
+      dinnerID = Alarm.alarmRepeat(DINNER_HOUR,DINNER_MIN,0, Dinner);
     } else if (eeprom_value == 4) {
-      Alarm.alarmRepeat(BREAKFAST_HOUR,BREAKFAST_MIN,0, Breakfast);
-      Alarm.alarmRepeat(LUNCH_HOUR,LUNCH_MIN,0, Lunch);
+      bfastID = Alarm.alarmRepeat(BREAKFAST_HOUR,BREAKFAST_MIN,0, Breakfast);
+      lunchID = Alarm.alarmRepeat(LUNCH_HOUR,LUNCH_MIN,0, Lunch);
     } else if (eeprom_value == 5) {
-      Alarm.alarmRepeat(BREAKFAST_HOUR,BREAKFAST_MIN,0, Breakfast);
-      Alarm.alarmRepeat(DINNER_HOUR,DINNER_MIN,10, Dinner);
+      bfastID = Alarm.alarmRepeat(BREAKFAST_HOUR,BREAKFAST_MIN,0, Breakfast);
+      dinnerID = Alarm.alarmRepeat(DINNER_HOUR,DINNER_MIN,10, Dinner);
     } else if (eeprom_value == 6) {
-      Alarm.alarmRepeat(LUNCH_HOUR,LUNCH_MIN,0, Lunch);
-      Alarm.alarmRepeat(DINNER_HOUR,DINNER_MIN,0, Dinner);
+      lunchID = Alarm.alarmRepeat(LUNCH_HOUR,LUNCH_MIN,0, Lunch);
+      dinnerID = Alarm.alarmRepeat(DINNER_HOUR,DINNER_MIN,0, Dinner);
     } else if (eeprom_value == 7) {
-      Alarm.alarmRepeat(BREAKFAST_HOUR,BREAKFAST_MIN,0, Breakfast);
-      Alarm.alarmRepeat(LUNCH_HOUR,LUNCH_MIN,0, Lunch);
-      Alarm.alarmRepeat(DINNER_HOUR,DINNER_MIN,0, Dinner);
+      bfastID = Alarm.alarmRepeat(BREAKFAST_HOUR,BREAKFAST_MIN,0, Breakfast);
+      lunchID = Alarm.alarmRepeat(LUNCH_HOUR,LUNCH_MIN,0, Lunch);
+      dinnerID = Alarm.alarmRepeat(DINNER_HOUR,DINNER_MIN,0, Dinner);
     } 
   }
     
@@ -166,8 +171,38 @@ void loop() {
       display.setTextSize(3);
       display.setCursor(10,15);   // x,y - y=15 is the bottom of the yellow portion
       display.println(F("SAVING"));
-      delay(4000);
-      resetFunc();  //call reset
+      delay(2000);
+
+      // clear all existing alarms and enable new ones
+      Alarm.disable(bfastID);
+      Alarm.disable(lunchID);
+      Alarm.disable(dinnerID);
+
+      if (eeprom_value > 0 && eeprom_value < 8) {
+        if (eeprom_value == 1) {
+          bfastID = Alarm.alarmRepeat(BREAKFAST_HOUR,BREAKFAST_MIN,0, Breakfast);
+        } else if (eeprom_value == 2) {
+          lunchID = Alarm.alarmRepeat(LUNCH_HOUR,LUNCH_MIN,0, Lunch);
+        } else if (eeprom_value == 3) {
+          dinnerID = Alarm.alarmRepeat(DINNER_HOUR,DINNER_MIN,0, Dinner);
+        } else if (eeprom_value == 4) {
+          bfastID = Alarm.alarmRepeat(BREAKFAST_HOUR,BREAKFAST_MIN,0, Breakfast);
+          lunchID = Alarm.alarmRepeat(LUNCH_HOUR,LUNCH_MIN,0, Lunch);
+        } else if (eeprom_value == 5) {
+          bfastID = Alarm.alarmRepeat(BREAKFAST_HOUR,BREAKFAST_MIN,0, Breakfast);
+          dinnerID = Alarm.alarmRepeat(DINNER_HOUR,DINNER_MIN,10, Dinner);
+        } else if (eeprom_value == 6) {
+          lunchID = Alarm.alarmRepeat(LUNCH_HOUR,LUNCH_MIN,0, Lunch);
+          dinnerID = Alarm.alarmRepeat(DINNER_HOUR,DINNER_MIN,0, Dinner);
+        } else if (eeprom_value == 7) {
+          bfastID = Alarm.alarmRepeat(BREAKFAST_HOUR,BREAKFAST_MIN,0, Breakfast);
+          lunchID = Alarm.alarmRepeat(LUNCH_HOUR,LUNCH_MIN,0, Lunch);
+          dinnerID = Alarm.alarmRepeat(DINNER_HOUR,DINNER_MIN,0, Dinner);
+        } 
+      } // end: if new alarm is > 0 and < 8
+
+    } // end: it's been 6 seconds
+      
     
   } else {
     // not in setup mode, run main program
@@ -233,7 +268,8 @@ void loop() {
       delay(500);
     }
 
-  } // end not in setup mode, run program
+  } // end: not in setup mode, run program
+  
 }
 
 // functions to be called when an alarm triggers:
@@ -298,10 +334,3 @@ void displayDigits(int digits) {
     display.print('0');
   display.print(digits);
 }
-
-void(* resetFunc) (void) = 0;  //declare reset function at address 0
-
-
-
-
-
