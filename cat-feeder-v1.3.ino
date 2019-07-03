@@ -1,4 +1,4 @@
-/* Cat Feeder v1.3 Created by Gabe Mulford 
+/* Cat Feeder v1.3 Created by Gabe Dagen
  * Automatically feeds pet every day at user-determined times (breakfast, lunch, dinner or any combination)
  * Also has a manual push button switch for manually activating feeder outside of scheduled times.
  * 
